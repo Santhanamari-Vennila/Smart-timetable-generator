@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College Timetable Generator</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="shortcut icon" href="/static/WhatsApp Image 2025-08-24 at 4.11.31 PM.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Add this to ensure icons display properly */
+        .fas, .far, .fab {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+        }
+        .far {
+            font-weight: 400;
+        }
+        .btn i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-calendar-alt"></i> College Department Timetable Generator</h1>
+        <button id="clear-data-btn" class="btn-danger" style="position: fixed; bottom: 20px; right: 20px;">
+            <i class="fas fa-trash"></i> Clear All Saved Data
+        </button>
+        
+        <!-- Navigation Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-step active" data-section="department-section">
+                <i class="fas fa-building"></i> 1. Department
+            </div>
+            <div class="progress-step" data-section="teacher-section">
+                <i class="fas fa-chalkboard-teacher"></i> 2. Teachers
+            </div>
+            <div class="progress-step" data-section="class-section">
+                <i class="fas fa-school"></i> 3. Classes
+            </div>
+            <div class="progress-step" data-section="constraints-section">
+                <i class="fas fa-cogs"></i> 4. Constraints
+            </div>
+        </div>
+        
+        <!-- Department Section -->
+        <div class="form-section active" id="department-section">
+            <h2><i class="fas fa-building"></i> Department Details</h2>
+            <div class="form-group">
+                <label><i class="fas fa-signature"></i> Department Name:</label>
+                <input type="text" id="dept-name" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-code"></i> Department Code:</label>
+                <input type="text" id="dept-code" required>
+                <div id="dept-status"></div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-next" onclick="showSection('teacher-section')">
+                    <i class="fas fa-arrow-right"></i> Next
+                </button>
+            </div>
+        </div>
+
+        <div class="form-section" id="department-overview-section">
+            <h2><i class="fas fa-list"></i> Department Timetable Overview</h2>
+            <div id="timetable-overview">
+                <div class="loading" id="overview-loading">
+                    <h3><i class="fas fa-spinner fa-spin"></i> Loading Timetables...</h3>
+                </div>
+                <div id="timetable-list" style="display: none;"></div>
+                <div id="no-timetables-message" style="display: none;">
+                    <p><i class="fas fa-info-circle"></i> No timetables found. Create a new one to get started.</p>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-back" onclick="showSection('department-section')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn-next" onclick="showSection('teacher-section')">
+                    <i class="fas fa-plus"></i> Create New Timetable
+                </button>
+            </div>
+        </div>
+
+        <!-- Teacher Section -->
+        <div class="form-section" id="teacher-section">
+            <h2><i class="fas fa-chalkboard-teacher"></i> Teacher Details</h2>
+            <div id="teachers-container">
+                <div class="teacher-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-user"></i> Teacher Name:</label>
+                        <input type="text" class="teacher-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-id-card"></i> Teacher Code:</label>
+                        <input type="text" class="teacher-code" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-book"></i> Subjects:</label>
+                        <div class="subjects-input-container">
+                            <div class="subject-input-group">
+                                <input type="text" class="subject-input" placeholder="Subject name" required>
+                                <button type="button" class="remove-subject-btn" onclick="this.closest('.subject-input-group').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-subject-btn" onclick="addSubjectToTeacher(this.closest('.teacher-form'))">
+                            <i class="fas fa-plus"></i> Add Subject
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Max Working Hours/Week:</label>
+                        <input type="number" class="working-hours" min="1" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-forward"></i> Max Consecutive Periods:</label>
+                        <input type="number" class="max-consecutive" min="1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-coffee"></i> Minimum Free Periods per Day:</label>
+                        <input type="number" class="min-free-periods" min="1" max="6" value="2">
+                    </div>
+                    <button type="button" class="btn-remove" onclick="this.closest('.teacher-form').remove()">
+                        <i class="fas fa-trash"></i> Remove Teacher
+                    </button>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-add" onclick="addTeacherForm()">
+                    <i class="fas fa-user-plus"></i> Add Teacher
+                </button>
+                <button class="btn-back" onclick="showSection('department-section')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn-next" onclick="saveTeachers()">
+                    <i class="fas fa-save"></i> Save & Next
+                </button>
+            </div>
+        </div>
+
+        <!-- Class Section -->
+        <div class="form-section" id="class-section">
+            <h2><i class="fas fa-school"></i> Class Details</h2>
+            <div id="classes-container"></div>
+            <div class="form-actions">
+                <button class="btn-add" id="add-class-btn" type="button">
+                    <i class="fas fa-plus-circle"></i> Add Class
+                </button>
+                <button class="btn-back" onclick="showSection('teacher-section')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn-next" id="save-class-btn" type="button">
+                    <i class="fas fa-save"></i> Save & Next
+                </button>
+            </div>
+        </div>
+
+        <!-- Constraints Section -->
+        <div class="form-section" id="constraints-section">
+            <h2><i class="fas fa-cogs"></i> Timetable Constraints</h2>
+            <div class="form-group">
+                <label><i class="fas fa-calendar-day"></i> Working Days per Week:</label>
+                <input type="number" id="working-days" min="1" max="7" value="5" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-clock"></i> Periods per Day:</label>
+                <input type="number" id="periods-per-day" min="1" max="10" value="6" required>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-coffee"></i> Break Periods (comma separated):</label>
+                <input type="text" id="break-periods" placeholder="3,6">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-exchange-alt"></i> Minimum Gap Between Same Subject:</label>
+                <input type="number" id="subject-gap" min="0" value="1">
+            </div>
+            <div class="form-actions">
+                <button class="btn-back" onclick="showSection('class-section')">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn-generate" id="generate-timetable-btn">
+                    <i class="fas fa-magic"></i> Generate Timetable
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="timetable-results" hidden></div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
