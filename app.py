@@ -27,6 +27,7 @@ def get_db():
         try:
             g.db = mysql.connector.connect(
                 host=os.getenv('DB_HOST', 'localhost'),
+                port=int(os.getenv('DB_PORT', 3306)),
                 user=os.getenv('DB_USER', 'root'),
                 password=os.getenv('DB_PASSWORD', 'root'),
                 database=os.getenv('DB_NAME', 'timetable_generator'),
@@ -38,7 +39,6 @@ def get_db():
             logger.error(f"Database connection failed: {e}")
             raise e
     return g.db
-
 @app.teardown_appcontext
 def close_db(error):
     """Close database connection"""
